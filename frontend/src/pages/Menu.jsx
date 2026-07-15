@@ -1,21 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 
-const Menu = ({ cart, addToCart, removeFromCart }) => {
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dietFilter, setDietFilter] = useState('all'); // all, veg, nonveg
-  const [addedAnimationId, setAddedAnimationId] = useState(null);
-
-  const categories = [
-    { id: 'all', label: 'All Items' },
-    { id: 'hot-coffee', label: 'Hot Coffee' },
-    { id: 'cold-coffee', label: 'Cold Coffee' },
-    { id: 'snacks', label: 'Snacks' },
-    { id: 'desserts', label: 'Desserts' }
-  ];
-
-  const menuItems = [
+const DEFAULT_MENU = [
     // Hot Coffee
     { id: 'hc1', name: 'Cappuccino', category: 'hot-coffee', price: 120, isVeg: true, desc: 'Espresso topped with a deep layer of foamy steamed milk.' },
     { id: 'hc2', name: 'Café Latte', category: 'hot-coffee', price: 160, isVeg: true, desc: 'Rich espresso balanced with steamed milk and a light layer of foam.' },
@@ -54,8 +40,72 @@ const Menu = ({ cart, addToCart, removeFromCart }) => {
     { id: 'ds5', name: 'Vanilla Scoop', category: 'desserts', price: 90, isVeg: true, desc: 'Premium Madagascar vanilla bean ice cream single scoop.' },
     { id: 'ds6', name: 'Berry Cheesecake', category: 'desserts', price: 190, isVeg: true, desc: 'Rich cheesecake topped with a sweet homemade mixed berry compote.' },
     { id: 'ds7', name: 'Strawberry Cake Slice', category: 'desserts', price: 160, isVeg: true, desc: 'Moist vanilla sponge cake layered with fresh strawberries and cream.' },
-    { id: 'ds8', name: 'Red Velvet Cake Slice', category: 'desserts', price: 190, isVeg: true, desc: 'Crimson cocoa cake layers frosted with sweet cream cheese frosting.' }
+    { id: 'ds8', name: 'Red Velvet Cake Slice', category: 'desserts', price: 190, isVeg: true, desc: 'Crimson cocoa cake layers frosted with sweet cream cheese frosting.' },
+    
+    // Non-Veg Soups & Shorba
+    { id: 'nv_sp1', name: 'Chicken Munchow Soup', category: 'tandoor-soups', price: 120, isVeg: false, desc: 'Classic Indo-Chinese soup with shredded chicken, mixed veggies, and crispy noodles.' },
+    { id: 'nv_sp2', name: 'Murg Dhaniya Shorba', category: 'tandoor-soups', price: 120, isVeg: false, desc: 'A clear chicken soup infused with fresh coriander leaves and aromatic spices.' },
+    { id: 'nv_sp3', name: 'Cream of Chicken Soup', category: 'tandoor-soups', price: 120, isVeg: false, desc: 'Rich, creamy soup with tender chicken pieces and a hint of herbs.' },
+    { id: 'nv_sp4', name: 'Chicken Sweet Corn Soup', category: 'tandoor-soups', price: 115, isVeg: false, desc: 'Comforting soup featuring sweet corn kernels and tender chicken in a savory broth.' },
+    { id: 'nv_sp5', name: 'Chicken Hot & Sour Soup', category: 'tandoor-soups', price: 110, isVeg: false, desc: 'Spicy and tangy soup loaded with chicken, vegetables, and vinegar.' },
+    { id: 'nv_sp6', name: 'Chicken Clear Soup', category: 'tandoor-soups', price: 95, isVeg: false, desc: 'Light and nutritious chicken broth with delicate vegetables.' },
+    
+    // Non-Veg Starters Tandoor Se...
+    { id: 'nv_st1', name: 'Non-Veg Kebab Platter', category: 'tandoor-soups', price: 595, isVeg: false, desc: 'An assortment of our finest tandoori chicken, fish, and mutton kebabs.' },
+    { id: 'nv_st2', name: 'Jheenga Dum Ajwaini', category: 'tandoor-soups', price: 495, isVeg: false, desc: 'Jumbo prawns marinated in yogurt, carom seeds, and tandoori spices, cooked in clay oven.' },
+    { id: 'nv_st3', name: 'Hariyali Jheenga Tikka', category: 'tandoor-soups', price: 495, isVeg: false, desc: 'Succulent prawns marinated in a fresh green paste of mint and coriander, grilled.' },
+    { id: 'nv_st4', name: 'Tandoori Fish', category: 'tandoor-soups', price: 390, isVeg: false, desc: 'Whole fish marinated in yogurt and traditional spices, roasted in clay oven.' },
+    { id: 'nv_st5', name: 'Fish Tikka', category: 'tandoor-soups', price: 380, isVeg: false, desc: 'Boneless chunks of fish marinated in tandoori spices and cooked in clay oven.' },
+    { id: 'nv_st6', name: 'Murg Changeezi Kebab', category: 'tandoor-soups', price: 340, isVeg: false, desc: 'Tender chicken chunks marinated in a rich, creamy spices blend and chargrilled.' },
+    { id: 'nv_st7', name: 'Murgh Malai Tikka', category: 'tandoor-soups', price: 320, isVeg: false, desc: 'Melt-in-your-mouth chicken pieces marinated in cream, cheese, and mild spices.' },
+    { id: 'nv_st8', name: 'Murgh Afghani Tikka', category: 'tandoor-soups', price: 310, isVeg: false, desc: 'Rich and creamy chicken tikka marinated with cashews, cream, and green cardamom.' },
+    { id: 'nv_st9', name: 'Murg Dum Pook Tikka', category: 'tandoor-soups', price: 290, isVeg: false, desc: 'Slow-cooked, succulent tandoori chicken tikka infused with royal spices.' },
+    { id: 'nv_st10', name: 'Tangdi Kebab (3 Piece)', category: 'tandoor-soups', price: 275, isVeg: false, desc: 'Chicken drumsticks marinated in rich yogurt and spices, grilled to perfection.' },
+    { id: 'nv_st11', name: 'Murgh Achari Tikka', category: 'tandoor-soups', price: 270, isVeg: false, desc: 'Spicy chicken tikka infused with the tangy notes of pickling (achari) spices.' },
+    { id: 'nv_st12', name: 'Khas Seekh Tikka', category: 'tandoor-soups', price: 260, isVeg: false, desc: 'Minced chicken flavored with fresh herbs and spices, skewered and grilled.' },
+    { id: 'nv_st13', name: 'Murgh Banjara Tikka', category: 'tandoor-soups', price: 260, isVeg: false, desc: 'Spicy chicken tikka marinated in a robust mixture of sesame seeds, green chillies, and spices.' },
+    { id: 'nv_st14', name: 'Murgh Angara Tikka', category: 'tandoor-soups', price: 260, isVeg: false, desc: 'Fiery, red-hot grilled chicken chunks marinated in extra spicy spices and chilies.' },
+    { id: 'nv_st15', name: 'Murgh Jeerawala Tikka', category: 'tandoor-soups', price: 250, isVeg: false, desc: 'Tender chicken tikka flavored with freshly roasted cumin seeds and spices.' },
+    { id: 'nv_st16_h', name: 'Tandoori Chicken (Half)', category: 'tandoor-soups', price: 250, isVeg: false, desc: 'Classic tandoori-spiced bone-in chicken grilled to juicy perfection (Half Portion).' },
+    { id: 'nv_st16_f', name: 'Tandoori Chicken (Full)', category: 'tandoor-soups', price: 495, isVeg: false, desc: 'Classic tandoori-spiced bone-in chicken grilled to juicy perfection (Full Portion).' }
+];
+
+const Menu = ({ cart, addToCart, removeFromCart }) => {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dietFilter, setDietFilter] = useState('all'); // all, veg, nonveg
+  const [addedAnimationId, setAddedAnimationId] = useState(null);
+
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+
+  const categories = [
+    { id: 'all', label: 'All Items' },
+    { id: 'hot-coffee', label: 'Hot Coffee' },
+    { id: 'cold-coffee', label: 'Cold Coffee' },
+    { id: 'snacks', label: 'Snacks' },
+    { id: 'desserts', label: 'Desserts' },
+    { id: 'tandoor-soups', label: 'Tandoor & Soups' }
   ];
+
+  React.useEffect(() => {
+    fetch('/api/menu')
+      .then((res) => {
+        if (!res.ok) throw new Error('Server returned an error');
+        return res.json();
+      })
+      .then((data) => {
+        setMenuItems(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.warn('Backend menu unavailable. Loading offline backup.', err);
+        setFetchError('Offline Mode: Displaying offline backup menu. Reconnecting...');
+        setMenuItems(DEFAULT_MENU);
+        setLoading(false);
+      });
+  }, []);
 
   // Filtering Logic
   const filteredItems = menuItems.filter(item => {
@@ -92,7 +142,7 @@ const Menu = ({ cart, addToCart, removeFromCart }) => {
         </div>
 
         {/* Search and Food Habit Filter Panel */}
-        <div style={styles.filterControls} className="glass-panel">
+        <div style={styles.filterControls} className="glass-panel menu-filter-controls">
           {/* Search Box */}
           <div style={styles.searchBox}>
             <Search size={18} color="var(--text-muted)" style={styles.searchIcon} />
@@ -106,7 +156,7 @@ const Menu = ({ cart, addToCart, removeFromCart }) => {
           </div>
 
           {/* Diet Habit Switcher */}
-          <div style={styles.dietSelector}>
+          <div style={styles.dietSelector} className="menu-diet-selector">
             <button 
               onClick={() => setDietFilter('all')}
               style={{
@@ -156,7 +206,18 @@ const Menu = ({ cart, addToCart, removeFromCart }) => {
 
       {/* Menu Grid */}
       <section style={styles.menuGridSection}>
-        {filteredItems.length > 0 ? (
+        {fetchError && (
+          <div style={styles.errorBanner}>
+            <span>⚠️ {fetchError}</span>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={styles.loadingSpinnerContainer}>
+            <div className="spinner" />
+            <p style={{ marginTop: '15px', color: 'var(--text-secondary)' }}>Loading our delicious menu...</p>
+          </div>
+        ) : filteredItems.length > 0 ? (
           <div className="grid-3" style={styles.menuGrid}>
             {filteredItems.map((item) => {
               const qty = getCartQuantity(item.id);
@@ -253,11 +314,6 @@ const styles = {
     padding: '12px 24px',
     borderRadius: '30px',
     background: 'rgba(15, 15, 17, 0.8)',
-    '@media (max-width: 768px)': {
-      flexDirection: 'column',
-      borderRadius: '20px',
-      padding: '16px',
-    }
   },
   searchBox: {
     display: 'flex',
@@ -294,10 +350,6 @@ const styles = {
     borderRadius: '20px',
     border: '1px solid rgba(255, 255, 255, 0.05)',
     flexShrink: 0,
-    '@media (max-width: 768px)': {
-      width: '100%',
-      justifyContent: 'space-around',
-    }
   },
   dietBtn: {
     background: 'none',
@@ -455,6 +507,25 @@ const styles = {
     textAlign: 'center',
     maxWidth: '600px',
     margin: '0 auto',
+  },
+  loadingSpinnerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '80px 20px',
+  },
+  errorBanner: {
+    maxWidth: '800px',
+    margin: '0 auto 20px',
+    padding: '12px 20px',
+    backgroundColor: 'rgba(229, 9, 20, 0.1)',
+    border: '1px solid rgba(229, 9, 20, 0.3)',
+    borderRadius: '12px',
+    color: 'var(--primary-red)',
+    textAlign: 'center',
+    fontSize: '0.9rem',
+    fontWeight: '500',
   }
 };
 

@@ -19,7 +19,7 @@ const InstagramIcon = ({ size = 20, color = "currentColor" }) => (
   </svg>
 );
 
-const Contact = () => {
+const Contact = ({ settings }) => {
   const [formState, setFormState] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -41,13 +41,33 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API delay
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      setFormState({ name: '', email: '', subject: '', message: '' });
-      setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 1200);
+    // Post message payload to backend
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formState)
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then(errData => {
+            throw new Error(errData.error || 'Failed to submit message');
+          });
+        }
+        return res.json();
+      })
+      .then(() => {
+        setIsSubmitting(false);
+        setSubmitSuccess(true);
+        setFormState({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      })
+      .catch((err) => {
+        console.error('Contact submission error:', err);
+        alert(`Submission failed: ${err.message || 'Server connection error'}`);
+        setIsSubmitting(false);
+      });
   };
 
   return (
@@ -60,13 +80,13 @@ const Contact = () => {
           <h1 className="section-title">Contact <span>Us</span></h1>
         </div>
 
-        <div style={styles.contactGrid}>
+        <div className="contact-grid" style={styles.contactGrid}>
           {/* Left Column: Form */}
           <div style={styles.formContainer}>
             <h2 style={styles.colHeader}>Send Us a Message</h2>
             <form onSubmit={handleSubmit} className="glass-panel" style={styles.contactForm}>
               
-              <div style={styles.row2}>
+              <div className="contact-form-row2" style={styles.row2}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Name</label>
                   <input 
@@ -152,7 +172,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 style={styles.infoItemTitle}>Find Us</h4>
-                  <p style={styles.infoItemText}>9, Cloud Avenue, Sector 62, Noida, UP - 201301</p>
+                  <p style={styles.infoItemText}>{settings.address}</p>
                 </div>
               </div>
 
@@ -162,7 +182,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 style={styles.infoItemTitle}>Call Us</h4>
-                  <p style={styles.infoItemText}>+91 98765 43210</p>
+                  <p style={styles.infoItemText}>{settings.phone}</p>
                 </div>
               </div>
 
@@ -172,7 +192,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h4 style={styles.infoItemTitle}>Email Us</h4>
-                  <p style={styles.infoItemText}>hello@cloud9cafe.in</p>
+                  <p style={styles.infoItemText}>{settings.email}</p>
                 </div>
               </div>
             </div>
@@ -190,9 +210,9 @@ const Contact = () => {
             {/* Social Grid section */}
             <div style={styles.socialSection}>
               <h3 style={styles.socialHeader}>
-                <InstagramIcon size={18} color="var(--primary-red)" /> @cloud9_cafe
+                <InstagramIcon size={18} color="var(--primary-red)" /> @{settings.name.toLowerCase().replace(/\s+/g, '_')}
               </h3>
-              <div style={styles.instaGrid}>
+              <div className="contact-insta-grid" style={styles.instaGrid}>
                 {instagramFeed.map((post) => (
                   <div key={post.id} style={styles.instaCard}>
                     {/* Simulated post overlay with red ambient filter */}
@@ -232,9 +252,6 @@ const styles = {
     gap: '40px',
     marginTop: '30px',
     alignItems: 'start',
-    '@media (max-width: 992px)': {
-      gridTemplateColumns: '1fr',
-    }
   },
   colHeader: {
     fontFamily: 'var(--font-title)',
@@ -259,9 +276,6 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '20px',
-    '@media (max-width: 576px)': {
-      gridTemplateColumns: '1fr',
-    }
   },
   formGroup: {
     display: 'flex',
@@ -424,9 +438,6 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '12px',
-    '@media (max-width: 576px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-    }
   },
   instaCard: {
     aspectRatio: '1',

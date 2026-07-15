@@ -63,26 +63,38 @@ const Experience = () => {
     if (!containerRef.current) return;
 
     // --- Scene Setup ---
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight || 550;
-
     const scene = new THREE.Scene();
     scene.background = null;
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
     camera.position.set(0, 3.5, 9);
     camera.lookAt(0, 0.5, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    containerRef.current.appendChild(renderer.domElement);
+    
+    const container = containerRef.current;
+    container.appendChild(renderer.domElement);
+
+    // --- Resize Observer ---
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        const w = width || container.clientWidth || 300;
+        const h = height || container.clientHeight || 550;
+        
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+    });
+    resizeObserver.observe(container);
 
     // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0x0a0a0c, 3.0);
+    const ambientLight = new THREE.AmbientLight(0x38282d, 3.0);
     scene.add(ambientLight);
 
     const keyLight = new THREE.DirectionalLight(0xfff5eb, 5.0);
@@ -91,6 +103,11 @@ const Experience = () => {
     keyLight.shadow.mapSize.width = 1024;
     keyLight.shadow.mapSize.height = 1024;
     scene.add(keyLight);
+
+    // Fill Light - Soft warm light from front-top-left to illuminate shadow areas
+    const fillLight = new THREE.DirectionalLight(0xfff0e8, 2.0);
+    fillLight.position.set(-5, 3, 5);
+    scene.add(fillLight);
 
     // Rim/Neon Light (Customizable)
     const rimLight = new THREE.PointLight(new THREE.Color(neonColor), 9.0, 15);
@@ -111,7 +128,7 @@ const Experience = () => {
     // Ceramic Saucer
     const saucerGeom = new THREE.CylinderGeometry(1.65, 1.15, 0.1, 32);
     const saucerMat = new THREE.MeshStandardMaterial({
-      color: 0x111113,
+      color: 0x1e1e24,
       roughness: 0.2,
       metalness: 0.1
     });
@@ -126,8 +143,8 @@ const Experience = () => {
 
     // Cup Ceramic Outer
     const cupOuterGeom = new THREE.CylinderGeometry(1.15, 0.98, 1.45, 32, 1, false);
-    const cupOuterMat = new THREE.MeshStandardMaterial({
-      color: 0x0a0a0c,
+    const cupOuterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x25252a,
       roughness: 0.15,
       metalness: 0.3,
       clearcoat: 0.9,
@@ -382,9 +399,9 @@ const Experience = () => {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('resize', onResize);
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
+      resizeObserver.disconnect();
+      if (container && renderer.domElement) {
+        container.removeChild(renderer.domElement);
       }
       scene.clear();
       saucerGeom.dispose();
@@ -417,9 +434,9 @@ const Experience = () => {
           <h1 className="section-title">3D Café <span>Lab</span></h1>
         </div>
 
-        <div style={styles.labGrid}>
+        <div className="lab-grid" style={styles.labGrid}>
           {/* 3D Canvas */}
-          <div style={styles.canvasPanel} className="glass-panel">
+          <div className="canvas-panel glass-panel" style={styles.canvasPanel}>
             <div ref={containerRef} style={{ width: '100%', height: '100%', minHeight: '400px' }} />
             <div style={styles.badgeOverlay}>
               <span style={styles.controlBadge}>Ambient Render Active</span>
@@ -574,9 +591,6 @@ const styles = {
     gap: '35px',
     marginTop: '30px',
     alignItems: 'stretch',
-    '@media (max-width: 992px)': {
-      gridTemplateColumns: '1fr',
-    }
   },
   canvasPanel: {
     position: 'relative',
@@ -586,9 +600,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    '@media (max-width: 576px)': {
-      height: '380px',
-    }
   },
   badgeOverlay: {
     position: 'absolute',

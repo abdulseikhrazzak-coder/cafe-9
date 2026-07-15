@@ -8,40 +8,57 @@ const ThreeCoffeeCup = () => {
     if (!containerRef.current) return;
 
     // --- Scene Setup ---
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight || 500;
-    
     const scene = new THREE.Scene();
     
     // Transparent or dark background
     scene.background = null;
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(0, 3, 8);
     camera.lookAt(0, 0.5, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    containerRef.current.appendChild(renderer.domElement);
+    
+    const container = containerRef.current;
+    container.appendChild(renderer.domElement);
+
+    // --- Resize Observer ---
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        const w = width || container.clientWidth || 300;
+        const h = height || container.clientHeight || 500;
+        
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+    });
+    resizeObserver.observe(container);
 
     // --- Lighting ---
-    // Ambient light - deep red/dark tint
-    const ambientLight = new THREE.AmbientLight(0x0f0003, 2.5);
+    // Ambient light - warm crimson/dark tint
+    const ambientLight = new THREE.AmbientLight(0x3d2025, 3.0);
     scene.add(ambientLight);
 
     // Key Light - Warm white from front-top-right
-    const keyLight = new THREE.DirectionalLight(0xfff5ea, 4.0);
+    const keyLight = new THREE.DirectionalLight(0xfff5ea, 5.0);
     keyLight.position.set(5, 8, 5);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
     keyLight.shadow.mapSize.height = 1024;
     keyLight.shadow.bias = -0.001;
     scene.add(keyLight);
+
+    // Fill Light - Soft warm light from front-top-left to illuminate shadow areas
+    const fillLight = new THREE.DirectionalLight(0xfff0e8, 2.0);
+    fillLight.position.set(-5, 3, 5);
+    scene.add(fillLight);
 
     // Rim/Neon Light - Crimson Red from behind-left
     const rimLight = new THREE.PointLight(0xff0e3c, 8.0, 15);
@@ -61,7 +78,7 @@ const ThreeCoffeeCup = () => {
     const saucerGeometry = new THREE.CylinderGeometry(1.6, 1.1, 0.1, 32);
     // Smooth the bottom edge by using a slightly torus-like profile (simplified)
     const saucerMaterial = new THREE.MeshStandardMaterial({
-      color: 0x121214,
+      color: 0x1e1e24,
       roughness: 0.15,
       metalness: 0.1,
       bumpScale: 0.05
@@ -84,8 +101,8 @@ const ThreeCoffeeCup = () => {
 
     // Outer Ceramic Cylinder
     const cupOuterGeom = new THREE.CylinderGeometry(1.1, 0.95, 1.4, 32, 1, false);
-    const cupMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0c0c0e,
+    const cupMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x25252a,
       roughness: 0.2,
       metalness: 0.3,
       clearcoat: 0.8,
@@ -353,27 +370,15 @@ const ThreeCoffeeCup = () => {
 
     animate();
 
-    // --- Resize Handler ---
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight || 500;
-      
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', handleResize);
-
     // --- Clean Up ---
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
+      if (container && renderer.domElement) {
+        container.removeChild(renderer.domElement);
       }
       
       // Dispose resources

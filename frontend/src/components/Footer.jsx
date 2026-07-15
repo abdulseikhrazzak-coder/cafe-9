@@ -1,4 +1,4 @@
-import { Coffee, Phone, MapPin, Clock, Award, ExternalLink } from 'lucide-react';
+import { Coffee, Phone, MapPin, Clock, Award, ExternalLink, ArrowRight } from 'lucide-react';
 
 const InstagramIcon = ({ size = 20, color = "currentColor" }) => (
   <svg 
@@ -18,7 +18,7 @@ const InstagramIcon = ({ size = 20, color = "currentColor" }) => (
   </svg>
 );
 
-const Footer = ({ setActivePage }) => {
+const Footer = ({ setActivePage, settings, isAdmin, onAdminLogin, onAdminLogout }) => {
   const currentYear = new Date().getFullYear();
 
   const handleLinkClick = (pageId) => {
@@ -28,17 +28,25 @@ const Footer = ({ setActivePage }) => {
 
   return (
     <footer style={styles.footer}>
-      <div style={styles.footerTop}>
+      <div className="footer-top-grid" style={styles.footerTop}>
         {/* Info Column */}
         <div style={styles.col}>
           <div style={styles.logoRow}>
             <img 
-              src="/logo.png" 
-              alt="Cloud 9 Café Logo" 
+              src={settings.logo || "/logo.png"} 
+              alt={`${settings.name} Logo`} 
               style={styles.logoImg}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <span style={styles.logoText}>Cloud <span style={styles.logoRed}>9</span> Café</span>
+            <span style={styles.logoText}>
+              {settings.name.includes('9') ? (
+                <>
+                  {settings.name.split('9')[0]}
+                  <span style={styles.logoRed}>9</span>
+                  {settings.name.split('9')[1]}
+                </>
+              ) : settings.name}
+            </span>
           </div>
           <p style={styles.description}>
             Experience coffee elevated to cloud nine. Blended with passion, served in a dark-red neon ambiance. Crafted with precision for true coffee connoisseurs.
@@ -48,6 +56,7 @@ const Footer = ({ setActivePage }) => {
               href="https://instagram.com" 
               target="_blank" 
               rel="noreferrer" 
+              className="footer-social-icon"
               style={styles.socialIcon}
               title="Instagram"
             >
@@ -70,38 +79,29 @@ const Footer = ({ setActivePage }) => {
 
         {/* Delivery / Orders Column */}
         <div style={styles.col}>
-          <h4 style={styles.colTitle}>Order Delivery</h4>
+          <h4 style={styles.colTitle}>Direct Delivery</h4>
           <p style={styles.description}>
-            Order online from your favorite platforms. We deliver fast and fresh!
+            We deliver directly to your exact location. Experience fresh coffee and food right at your doorstep!
           </p>
           <div style={styles.deliveryContainer}>
-            {/* Zomato Link Mock */}
-            <a 
-              href="https://zomato.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              style={styles.deliveryCard}
+            <button 
+              onClick={() => setActivePage('order')} 
+              style={{
+                ...styles.deliveryCard,
+                background: 'rgba(229, 9, 20, 0.08)',
+                border: '1px solid rgba(229, 9, 20, 0.3)',
+                width: '100%',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontFamily: 'inherit'
+              }}
             >
-              <div style={styles.deliveryIconZomato}>Z</div>
+              <div style={styles.deliveryIconDirect}>D</div>
               <div style={styles.deliveryDetails}>
-                <span style={styles.deliveryTitle}>Zomato</span>
-                <span style={styles.deliveryStatus}>Order Online <ExternalLink size={12} /></span>
+                <span style={styles.deliveryTitle}>Order Direct</span>
+                <span style={styles.deliveryStatus}>Locate & Order Direct <ArrowRight size={12} style={{ marginLeft: '4px', verticalAlign: 'middle' }} /></span>
               </div>
-            </a>
-
-            {/* Swiggy Link Mock */}
-            <a 
-              href="https://swiggy.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              style={styles.deliveryCard}
-            >
-              <div style={styles.deliveryIconSwiggy}>S</div>
-              <div style={styles.deliveryDetails}>
-                <span style={styles.deliveryTitle}>Swiggy</span>
-                <span style={styles.deliveryStatus}>Order Online <ExternalLink size={12} /></span>
-              </div>
-            </a>
+            </button>
           </div>
         </div>
 
@@ -111,27 +111,48 @@ const Footer = ({ setActivePage }) => {
           <ul style={styles.contactList}>
             <li style={styles.contactItem}>
               <MapPin size={18} color="var(--primary-red)" style={{ flexShrink: 0 }} />
-              <span>9, Cloud Avenue, Sector 62, Noida, UP - 201301</span>
+              <span>{settings.address}</span>
             </li>
             <li style={styles.contactItem}>
               <Phone size={18} color="var(--primary-red)" style={{ flexShrink: 0 }} />
-              <span>+91 98765 43210</span>
+              <span>{settings.phone}</span>
             </li>
             <li style={styles.contactItem}>
               <Clock size={18} color="var(--primary-red)" style={{ flexShrink: 0 }} />
               <div>
-                <div>Mon - Fri: 8:00 AM - 11:00 PM</div>
-                <div style={{ color: 'var(--primary-red)' }}>Sat - Sun: 8:00 AM - 12:00 AM</div>
+                <div>{settings.timings}</div>
               </div>
             </li>
           </ul>
         </div>
       </div>
 
-      <div style={styles.footerBottom}>
+      <div style={styles.footerBottom} className="footer-bottom-container">
         <p style={styles.copyright}>
-          &copy; {currentYear} Cloud 9 Café. All rights reserved. Made with ❤️ for Coffee Lovers.
+          &copy; {currentYear} {settings.name}. All rights reserved. Made with ❤️ for Coffee Lovers.
         </p>
+        <div>
+          {isAdmin ? (
+            <button 
+              onClick={onAdminLogout}
+              className="admin-login-btn"
+            >
+              Admin Logout
+            </button>
+          ) : (
+            <button 
+              onClick={() => {
+                const passcode = prompt('Enter Admin Passcode:');
+                if (passcode !== null) {
+                  onAdminLogin(passcode);
+                }
+              }}
+              className="admin-login-btn"
+            >
+              Admin Login
+            </button>
+          )}
+        </div>
       </div>
     </footer>
   );
@@ -152,12 +173,6 @@ const styles = {
     gap: '40px',
     maxWidth: '1400px',
     margin: '0 auto 50px',
-    '@media (max-width: 1024px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-    },
-    '@media (max-width: 576px)': {
-      gridTemplateColumns: '1fr',
-    }
   },
   col: {
     display: 'flex',
@@ -269,29 +284,18 @@ const styles = {
       transform: 'translateY(-2px)',
     }
   },
-  deliveryIconZomato: {
+  deliveryIconDirect: {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    backgroundColor: '#cb202d',
+    backgroundColor: 'var(--primary-red)',
     color: '#ffffff',
     fontSize: '1.1rem',
     fontWeight: '800',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  deliveryIconSwiggy: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    backgroundColor: '#fc8019',
-    color: '#ffffff',
-    fontSize: '1.1rem',
-    fontWeight: '800',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    boxShadow: '0 0 10px rgba(229, 9, 20, 0.4)',
   },
   deliveryDetails: {
     display: 'flex',
@@ -332,29 +336,5 @@ const styles = {
     color: 'var(--text-muted)',
   }
 };
-
-// Add responsive layout styles inject
-if (typeof document !== 'undefined') {
-  const styleTag = document.createElement('style');
-  styleTag.innerHTML = `
-    footer button:hover {
-      color: var(--accent-red) !important;
-      transform: translateX(5px) !important;
-    }
-    footer a:hover {
-      border-color: var(--primary-red) !important;
-      background: rgba(255, 14, 60, 0.03) !important;
-    }
-    .footer-social-icon:hover {
-      background: var(--primary-red) !important;
-      border-color: var(--primary-red) !important;
-      color: white !important;
-      transform: translateY(-3px) !important;
-      box-shadow: 0 5px 15px rgba(229, 9, 20, 0.4) !important;
-    }
-  `;
-  document.head.appendChild(styleTag);
-  styles.socialIcon['className'] = 'footer-social-icon';
-}
 
 export default Footer;

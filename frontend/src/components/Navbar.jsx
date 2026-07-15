@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Menu, X, Coffee } from 'lucide-react';
 
-const Navbar = ({ activePage, setActivePage, cart }) => {
+const Navbar = ({ activePage, setActivePage, cart, settings, isAdmin }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
@@ -9,7 +9,8 @@ const Navbar = ({ activePage, setActivePage, cart }) => {
     { id: 'menu', label: 'Menu' },
     { id: 'experience', label: '3D Experience' },
     { id: 'order', label: 'Order Now' },
-    { id: 'contact', label: 'Contact' }
+    { id: 'contact', label: 'Contact' },
+    ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel' }] : [])
   ];
 
   const totalCartItems = cart.reduce((total, item) => total + item.quantity, 0);
@@ -26,8 +27,8 @@ const Navbar = ({ activePage, setActivePage, cart }) => {
         {/* Brand/Logo */}
         <div onClick={() => handleNavClick('home')} style={styles.logoContainer}>
           <img 
-            src="/logo.png" 
-            alt="Cloud 9 Café Logo" 
+            src={settings.logo || "/logo.png"} 
+            alt={`${settings.name} Logo`} 
             style={styles.logoImg}
             onError={(e) => {
               // Fallback if image fails to load
@@ -39,12 +40,18 @@ const Navbar = ({ activePage, setActivePage, cart }) => {
             <Coffee size={24} color="#ff3344" />
           </div>
           <span style={styles.logoText}>
-            Cloud <span style={styles.logoRed}>9</span> Café
+            {settings.name.includes('9') ? (
+              <>
+                {settings.name.split('9')[0]}
+                <span style={styles.logoRed}>9</span>
+                {settings.name.split('9')[1]}
+              </>
+            ) : settings.name}
           </span>
         </div>
 
         {/* Desktop Navigation */}
-        <div style={styles.navLinks}>
+        <div className="desktop-links" style={styles.navLinks}>
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -74,6 +81,7 @@ const Navbar = ({ activePage, setActivePage, cart }) => {
           </button>
 
           <button 
+            className="menu-toggle-btn"
             onClick={() => setIsOpen(!isOpen)} 
             style={styles.menuToggle}
           >
@@ -163,9 +171,6 @@ const styles = {
     display: 'flex',
     gap: '24px',
     alignItems: 'center',
-    '@media (max-width: 768px)': {
-      display: 'none',
-    },
   },
   navLink: {
     background: 'none',
@@ -241,9 +246,6 @@ const styles = {
     color: '#ffffff',
     cursor: 'pointer',
     padding: '4px',
-    '@media (max-width: 768px)': {
-      display: 'block',
-    },
   },
   mobileMenu: {
     position: 'absolute',
@@ -276,28 +278,5 @@ const styles = {
     borderBottomColor: 'var(--primary-red)',
   }
 };
-
-// Add desktop/mobile CSS media rules dynamically or inject via a stylesheet
-if (typeof document !== 'undefined') {
-  const styleTag = document.createElement('style');
-  styleTag.innerHTML = `
-    @media (max-width: 768px) {
-      .desktop-links {
-        display: none !important;
-      }
-      nav > div > button {
-        display: block !important;
-      }
-    }
-    @media (min-width: 769px) {
-      .menu-toggle-btn {
-        display: none !important;
-      }
-    }
-  `;
-  // Set custom classes as style triggers
-  styles.navLinks['className'] = 'desktop-links';
-  styles.menuToggle['className'] = 'menu-toggle-btn';
-}
 
 export default Navbar;

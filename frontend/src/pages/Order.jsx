@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Trash2, ArrowRight, CheckCircle, ExternalLink, QrCode, ClipboardCheck } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, CheckCircle, ExternalLink, QrCode, ClipboardCheck, MapPin } from 'lucide-react';
 
 const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
   const [formData, setFormData] = useState({
@@ -12,6 +12,51 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
   
   const [orderStatus, setOrderStatus] = useState('idle'); // idle, processing, success
   const [lastOrderDetails, setLastOrderDetails] = useState(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    
+    setDetectingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Fetch human-readable address from OpenStreetMap Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+          .then((res) => {
+            if (!res.ok) throw new Error('Geocoding request failed');
+            return res.json();
+          })
+          .then((data) => {
+            const displayAddress = data.display_name || `${latitude}, ${longitude}`;
+            setFormData((prev) => ({
+              ...prev,
+              address: `[Exact Location Detected]\nAddress: ${displayAddress}\nCoords: ${latitude}, ${longitude}`
+            }));
+            setDetectingLocation(false);
+          })
+          .catch((err) => {
+            console.warn('Reverse geocoding failed, falling back to raw coordinates', err);
+            setFormData((prev) => ({
+              ...prev,
+              address: `[Exact Location Detected]\nCoords: ${latitude}, ${longitude}\n(Could not retrieve street name)`
+            }));
+            setDetectingLocation(false);
+          });
+      },
+      (error) => {
+        console.error('Error getting location', error);
+        alert(`Failed to detect location: ${error.message}. Please input manually.`);
+        setDetectingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   const deliveryFee = subtotal > 300 || subtotal === 0 ? 0 : 40;
@@ -28,17 +73,40 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
 
     setOrderStatus('processing');
     
-    // Simulate API delay
-    setTimeout(() => {
-      setLastOrderDetails({
-        id: 'C9C-' + Math.floor(100000 + Math.random() * 900000),
-        items: [...cart],
-        total: grandTotal,
-        customer: formData
+    // Submit the order payload to the backend
+    fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        customer: formData,
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        }))
+      })
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then(errData => {
+            throw new Error(errData.error || 'Failed to place order');
+          });
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setLastOrderDetails(data);
+        setOrderStatus('success');
+        clearCart();
+      })
+      .catch((err) => {
+        console.error('Order checkout error:', err);
+        alert(`Checkout failed: ${err.message || 'Server connection error'}`);
+        setOrderStatus('idle');
       });
-      setOrderStatus('success');
-      clearCart();
-    }, 1500);
   };
 
   return (
@@ -99,7 +167,7 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
           </div>
         ) : (
           // Checkout Layout View
-          <div style={styles.checkoutGrid}>
+          <div className="order-checkout-grid" style={styles.checkoutGrid}>
             
             {/* Left Side: Cart Items */}
             <div style={styles.cartColumn}>
@@ -107,7 +175,7 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
               {cart.length > 0 ? (
                 <div style={styles.cartItemsContainer}>
                   {cart.map((item) => (
-                    <div key={item.id} className="glass-panel" style={styles.cartItemCard}>
+                    <div key={item.id} className="glass-panel order-cart-item-card" style={styles.cartItemCard}>
                       <div style={styles.itemMainInfo}>
                         <h3 style={styles.cartItemName}>{item.name}</h3>
                         <span style={styles.cartItemSubtotal}>₹{item.price} x {item.quantity}</span>
@@ -153,18 +221,6 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
                 </div>
               )}
 
-              {/* Delivery apps widgets */}
-              <div style={styles.thirdPartyContainer}>
-                <h3 style={styles.thirdPartyTitle}>Or Order via Partners</h3>
-                <div style={styles.partnerButtons}>
-                  <a href="https://zomato.com" target="_blank" rel="noreferrer" className="btn" style={styles.zomatoBtn}>
-                    Order on Zomato <ExternalLink size={16} />
-                  </a>
-                  <a href="https://swiggy.com" target="_blank" rel="noreferrer" className="btn" style={styles.swiggyBtn}>
-                    Order on Swiggy <ExternalLink size={16} />
-                  </a>
-                </div>
-              </div>
             </div>
 
             {/* Right Side: Order Info Form */}
@@ -241,13 +297,25 @@ const Order = ({ cart, addToCart, removeFromCart, clearCart }) => {
                 {/* Form Group: Address */}
                 {formData.type === 'delivery' && (
                   <div style={styles.formGroup} className="animate-fade-in-up">
-                    <label style={styles.label}>Delivery Address *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ ...styles.label, marginBottom: 0 }}>Delivery Address *</label>
+                      <button
+                        type="button"
+                        onClick={detectLocation}
+                        disabled={cart.length === 0 || detectingLocation}
+                        className="btn btn-secondary"
+                        style={styles.locateBtn}
+                      >
+                        <MapPin size={14} color="var(--primary-red)" />
+                        {detectingLocation ? 'Detecting...' : 'Get Exact Location'}
+                      </button>
+                    </div>
                     <textarea 
                       name="address"
                       required={formData.type === 'delivery'}
                       value={formData.address}
                       onChange={handleInputChange}
-                      placeholder="Enter complete house address"
+                      placeholder="Enter complete house address (Click 'Get Exact Location' to autofill GPS position)"
                       rows={3}
                       style={styles.textarea}
                       disabled={cart.length === 0}
@@ -357,9 +425,6 @@ const styles = {
     gap: '40px',
     marginTop: '30px',
     alignItems: 'start',
-    '@media (max-width: 992px)': {
-      gridTemplateColumns: '1fr',
-    }
   },
   colHeader: {
     fontFamily: 'var(--font-title)',
@@ -386,11 +451,6 @@ const styles = {
     alignItems: 'center',
     background: 'rgba(15, 15, 17, 0.5)',
     gap: '15px',
-    '@media (max-width: 576px)': {
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      gap: '10px',
-    }
   },
   itemMainInfo: {
     display: 'flex',
@@ -484,43 +544,17 @@ const styles = {
     textAlign: 'center',
     background: 'rgba(15, 15, 17, 0.3)',
   },
-  thirdPartyContainer: {
-    marginTop: '15px',
-  },
-  thirdPartyTitle: {
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    marginBottom: '15px',
-    color: '#ffffff',
-  },
-  partnerButtons: {
-    display: 'flex',
-    gap: '15px',
-    '@media (max-width: 576px)': {
-      flexDirection: 'column',
-    }
-  },
-  zomatoBtn: {
-    flexGrow: 1,
-    backgroundColor: '#cb202d',
-    color: '#ffffff',
-    padding: '12px 20px',
-    boxShadow: '0 4px 15px rgba(203, 32, 45, 0.3)',
-    ':hover': {
-      backgroundColor: '#e12b39',
-      boxShadow: '0 6px 20px rgba(203, 32, 45, 0.5)',
-    }
-  },
-  swiggyBtn: {
-    flexGrow: 1,
-    backgroundColor: '#fc8019',
-    color: '#ffffff',
-    padding: '12px 20px',
-    boxShadow: '0 4px 15px rgba(252, 128, 25, 0.3)',
-    ':hover': {
-      backgroundColor: '#fd953c',
-      boxShadow: '0 6px 20px rgba(252, 128, 25, 0.5)',
-    }
+  locateBtn: {
+    padding: '6px 14px',
+    fontSize: '0.8rem',
+    borderRadius: '20px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
   },
   formColumn: {
     position: 'sticky',
@@ -740,7 +774,7 @@ const styles = {
   }
 };
 
-// Inject partner custom hover animations
+// Inject custom input hover styles
 if (typeof document !== 'undefined') {
   const styleTag = document.createElement('style');
   styleTag.innerHTML = `
@@ -749,22 +783,10 @@ if (typeof document !== 'undefined') {
       box-shadow: 0 0 10px rgba(229, 9, 20, 0.15) !important;
       background: rgba(255, 255, 255, 0.04) !important;
     }
-    .partner-zomato-btn:hover {
-      background-color: #e12b39 !important;
-      box-shadow: 0 6px 20px rgba(203, 32, 45, 0.5) !important;
-      transform: translateY(-2px);
-    }
-    .partner-swiggy-btn:hover {
-      background-color: #fd953c !important;
-      box-shadow: 0 6px 20px rgba(252, 128, 25, 0.5) !important;
-      transform: translateY(-2px);
-    }
   `;
   document.head.appendChild(styleTag);
   styles.input['className'] = 'checkout-input';
   if (styles.textarea) styles.textarea['className'] = 'checkout-textarea';
-  styles.zomatoBtn['className'] = 'partner-zomato-btn';
-  styles.swiggyBtn['className'] = 'partner-swiggy-btn';
 }
 
 export default Order;

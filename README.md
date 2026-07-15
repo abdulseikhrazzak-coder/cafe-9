@@ -1,16 +1,65 @@
-# React + Vite
+# Cloud 9 Café
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Restructured repository with separate **frontend** and **backend** folders.
 
-Currently, two official plugins are available:
+## Folder Directory Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```text
+Cloud 9 Café/
+├── frontend/                  <-- React + Vite Client
+│   ├── public/                <-- Static assets
+│   ├── src/                   <-- React components & pages
+│   ├── index.html             <-- HTML entry template
+│   ├── vite.config.js         <-- Vite dev configuration
+│   └── package.json           <-- Frontend scripts & dependencies
+├── backend/                   <-- Express Server (Backend API)
+│   ├── data/                  <-- JSON Database files
+│   ├── middleware/            <-- Request validators
+│   ├── db.js                  <-- In-memory data store helper
+│   ├── index.js               <-- Server main file
+│   └── package.json           <-- Backend scripts & dependencies
+└── package.json               <-- Root helper script workspace
+```
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How to Get Started
 
-## Expanding the Oxlint configuration
+### 1. Install Dependencies
+You can install dependencies for both the frontend and backend with a single command from the root directory:
+```bash
+npm run install:all
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Alternatively, you can install them manually inside their respective directories:
+```bash
+# Frontend
+cd frontend
+npm install
+
+# Backend
+cd ../backend
+npm install
+```
+
+---
+
+### 2. Run in Development Mode
+
+To run both servers in development mode:
+
+#### From the root folder (using helper scripts):
+- **Start Backend:** `npm run dev:backend` (runs on `http://localhost:5000`)
+- **Start Frontend:** `npm run dev:frontend` (runs on `http://localhost:5173`)
+
+#### Or run manually from each folder:
+- **Frontend:**
+  ```bash
+  cd frontend
+  npm run dev
+  ```
+- **Backend:**
+  ```bash
+  cd backend
+  npm run dev
+  ```

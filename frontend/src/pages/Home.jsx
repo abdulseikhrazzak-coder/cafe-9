@@ -2,7 +2,7 @@ import React from 'react';
 import { Coffee, ArrowRight, Star, Heart, Compass } from 'lucide-react';
 import ThreeCoffeeCup from '../components/ThreeCoffeeCup';
 
-const Home = ({ setActivePage }) => {
+const Home = ({ setActivePage, settings }) => {
   const reviews = [
     {
       name: 'Aarav Mehta',
@@ -30,20 +30,28 @@ const Home = ({ setActivePage }) => {
 
       {/* Hero Section */}
       <section style={styles.heroSection}>
-        <div style={styles.heroGrid}>
+        <div className="hero-grid" style={styles.heroGrid}>
           {/* Hero Left Content */}
           <div style={styles.heroTextContainer}>
-            <span className="badge badge-red" style={styles.heroBadge}>
+            <span className="badge badge-red hero-badge" style={styles.heroBadge}>
               <Coffee size={12} style={{ marginRight: '5px' }} /> Premium Coffee House
             </span>
-            <h1 style={styles.heroTitle}>
+            <h1 className="hero-title" style={styles.heroTitle}>
               Coffee Elevated <br />
-              to <span style={styles.accentText} className="glow-text">Cloud 9</span>
+              to <span style={styles.accentText} className="glow-text">
+                {settings.name.includes('9') ? (
+                  <>
+                    {settings.name.split('9')[0]}
+                    <span>9</span>
+                    {settings.name.split('9')[1]}
+                  </>
+                ) : settings.name}
+              </span>
             </h1>
-            <p style={styles.heroDescription}>
+            <p className="hero-description" style={styles.heroDescription}>
               Step into a premium sensory journey. Indulge in our craft coffees and delicacies, tailored to perfection and served in our iconic dark & crimson ambiance.
             </p>
-            <div style={styles.btnGroup}>
+            <div className="hero-btn-group" style={styles.btnGroup}>
               <button 
                 onClick={() => setActivePage('menu')} 
                 className="btn btn-primary"
@@ -62,7 +70,7 @@ const Home = ({ setActivePage }) => {
           </div>
 
           {/* Hero Right 3D Scene */}
-          <div style={styles.heroCanvasContainer}>
+          <div className="hero-canvas-container" style={styles.heroCanvasContainer}>
             <ThreeCoffeeCup />
             <div style={styles.hintOverlay}>
               <span className="animate-float" style={styles.hintText}>
@@ -74,7 +82,7 @@ const Home = ({ setActivePage }) => {
       </section>
 
       {/* Features Section */}
-      <section style={styles.featuresSection} className="glass-panel">
+      <section className="glass-panel home-features-section" style={styles.featuresSection}>
         <div className="section-header">
           <span className="section-subtitle">Why Choose Us</span>
           <h2 className="section-title">The Cloud 9 <span>Craft</span></h2>
@@ -115,7 +123,7 @@ const Home = ({ setActivePage }) => {
       {/* Featured Banner / Quote */}
       <section style={styles.quoteSection}>
         <div style={styles.quoteContainer}>
-          <h2 style={styles.quoteText}>
+          <h2 className="home-quote-text" style={styles.quoteText}>
             "Good communication is just as stimulating as black coffee, and just as hard to sleep after."
           </h2>
           <p style={styles.quoteAuthor}>— Anne Morrow Lindbergh</p>
@@ -171,10 +179,6 @@ const styles = {
     gap: '40px',
     width: '100%',
     alignItems: 'center',
-    '@media (max-width: 992px)': {
-      gridTemplateColumns: '1fr',
-      textAlign: 'center',
-    }
   },
   heroTextContainer: {
     display: 'flex',
@@ -192,9 +196,6 @@ const styles = {
     backgroundColor: 'rgba(229, 9, 20, 0.1)',
     border: '1px solid rgba(229, 9, 20, 0.3)',
     borderRadius: '20px',
-    '@media (max-width: 992px)': {
-      alignSelf: 'center',
-    }
   },
   heroTitle: {
     fontSize: '4.2rem',
@@ -202,12 +203,6 @@ const styles = {
     lineHeight: '1.1',
     letterSpacing: '-0.03em',
     color: '#ffffff',
-    '@media (max-width: 1200px)': {
-      fontSize: '3.5rem',
-    },
-    '@media (max-width: 576px)': {
-      fontSize: '2.5rem',
-    }
   },
   accentText: {
     color: 'var(--accent-red)',
@@ -217,17 +212,11 @@ const styles = {
     lineHeight: '1.6',
     color: 'var(--text-secondary)',
     maxWidth: '520px',
-    '@media (max-width: 992px)': {
-      margin: '0 auto',
-    }
   },
   btnGroup: {
     display: 'flex',
     gap: '16px',
     marginTop: '10px',
-    '@media (max-width: 992px)': {
-      justifyContent: 'center',
-    }
   },
   heroBtn: {
     padding: '14px 32px',
@@ -237,9 +226,6 @@ const styles = {
     height: '520px',
     position: 'relative',
     width: '100%',
-    '@media (max-width: 576px)': {
-      height: '380px',
-    }
   },
   hintOverlay: {
     position: 'absolute',
@@ -264,9 +250,6 @@ const styles = {
     margin: '60px auto',
     padding: '60px 40px',
     background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.8) 0%, rgba(10, 10, 12, 0.9) 100%)',
-    '@media (max-width: 768px)': {
-      padding: '40px 20px',
-    }
   },
   featuresGrid: {
     marginTop: '20px',
@@ -318,9 +301,6 @@ const styles = {
     lineHeight: '1.5',
     color: '#ffffff',
     marginBottom: '20px',
-    '@media (max-width: 768px)': {
-      fontSize: '1.5rem',
-    }
   },
   quoteAuthor: {
     color: 'var(--primary-red)',
