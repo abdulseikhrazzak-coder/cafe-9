@@ -533,4 +533,80 @@ footer button:hover {
   transform: none !important;
 }
 
+/* ==========================================================================
+   Mobile Layout Centering & Background Fixes
+   ========================================================================== */
+
+html, body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+@media (max-width: 992px) {
+  .hero-section {
+    display: block !important;
+    padding: 60px 20px 40px !important;
+    width: 100% !important;
+  }
+  .hero-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    gap: 30px !important;
+  }
+  .hero-text-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .hero-title {
+    font-size: 2.8rem !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+    width: 100% !important;
+  }
+  .hero-badge {
+    align-self: center !important;
+    margin: 0 auto !important;
+  }
+  .hero-description {
+    text-align: center !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .hero-btn-group {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  .hero-canvas-container {
+    width: 100% !important;
+    height: 380px !important;
+    margin-top: 10px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-features-section {
+    padding: 30px 20px !important;
+    margin: 40px 15px !important;
+    width: auto !important; /* Allow side margins to fit viewport */
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-title {
+    font-size: 2.2rem !important;
+  }
+  .hero-canvas-container {
+    height: 300px !important;
+  }
+}
+
+
 

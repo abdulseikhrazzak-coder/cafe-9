@@ -29,10 +29,10 @@ const Home = ({ setActivePage, settings }) => {
       <div className="gradient-overlay" />
 
       {/* Hero Section */}
-      <section style={styles.heroSection}>
+      <section className="hero-section" style={styles.heroSection}>
         <div className="hero-grid" style={styles.heroGrid}>
           {/* Hero Left Content */}
-          <div style={styles.heroTextContainer}>
+          <div className="hero-text-container" style={styles.heroTextContainer}>
             <span className="badge badge-red hero-badge" style={styles.heroBadge}>
               <Coffee size={12} style={{ marginRight: '5px' }} /> Premium Coffee House
             </span>
